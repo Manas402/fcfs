@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FCFS Disk Scheduling Visualizer</title>
+    <style>
+        :root {
+            --primary-color: #0f766e; /* Deep Teal */
+            --primary-hover: #115e59;
+            --bg-color: #e2e8f0; /* Soft Blue-Gray */
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #cbd5e1;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .dashboard {
+            display: flex;
+            flex-wrap: wrap;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        .input-panel {
+            flex: 1;
+            min-width: 350px;
+            padding: 2.5rem;
+            background: #f8fafc;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .output-panel {
+            flex: 1.5;
+            min-width: 400px;
+            padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h2 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            font-size: 1.8rem;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            border-left: 4px solid var(--primary-color);
+            padding-left: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-main);
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.1);
+        }
+
+        .buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        button {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            flex: 2;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            flex: 1;
+        }
+
+        .btn-secondary:hover {
+            background-color: #f1f5f9;
+        }
+
+        /* Output Area Styling */
+        h3 {
+            color: var(--text-main);
+            margin-bottom: 1rem;
+        }
+
+        .results-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .results-text {
+            color: var(--text-main);
+            font-size: 1.1rem;
+        }
+
+        .results-text span {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        canvas {
+            width: 100%;
+            height: 350px;
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard">
+        <div class="input-panel">
+            <h2>FCFS Disk Scheduling</h2>
+            <p class="subtitle">This tool calculates and visualizes the First-Come, First-Served (FCFS) disk scheduling algorithm.</p>
+
+            <div class="form-group">
+                <label>Disk Requests (comma-separated):</label>
+                <input type="text" id="requests" placeholder="e.g. 82, 170, 43, 140, 24, 16">
+            </div>
+
+            <div class="form-group">
+                <label>Initial Head Position:</label>
+                <input type="number" id="head" placeholder="e.g. 50">
+            </div>
+
+            <div class="form-group">
+                <label>Disk Size (Max Cylinder):</label>
+                <input type="number" id="size" placeholder="e.g. 200">
+            </div>
+
+            <div class="buttons">
+                <button class="btn-primary" onclick="calculateFCFS()">Calculate</button>
+                <button class="btn-secondary" onclick="resetForm()">Reset</button>
+            </div>
+        </div>
+
+        <div class="output-panel">
+            <h3>Results & Visualization</h3>
+            
+            <div class="results-card">
+                <div id="results-text" class="results-text">
+                    Enter your data on the left and click <strong>Calculate</strong> to see the total seek operations and head movement graph.
+                </div>
+            </div>
+
+            <canvas id="diskCanvas" width="600" height="350"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // Get canvas context
+        const canvas = document.getElementById('diskCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function calculateFCFS() {
+            const reqStr = document.getElementById('requests').value;
+            const headInput = parseInt(document.getElementById('head').value);
+            const sizeInput = parseInt(document.getElementById('size').value);
+
+            // Validation
+            if (!reqStr || isNaN(headInput) || isNaN(sizeInput)) {
+                alert("Please fill in all fields with valid numbers.");
+                return;
+            }
+
+            // Parse requests
+            const requests = reqStr.split(',')
+                                   .map(num => parseInt(num.trim()))
+                                   .filter(num => !isNaN(num));
+            
+            if (requests.length === 0) {
+                alert("Please enter valid disk requests.");
+                return;
+            }
+
+            // FCFS Logic
+            let totalSeek = 0;
+            let currentHead = headInput;
+            let sequence = [headInput, ...requests];
+
+            for (let i = 0; i < requests.length; i++) {
+                totalSeek += Math.abs(currentHead - requests[i]);
+                currentHead = requests[i];
+            }
+
+            // Update Text Results
+            document.getElementById('results-text').innerHTML = `
+                <p style="margin-bottom: 8px;">Seek Sequence: <span>${sequence.join(' &rarr; ')}</span></p>
+                <p>Total Seek Operations: <span>${totalSeek} cylinders</span></p>
+            `;
+
+            // Draw Graph
+            drawGraph(sequence, sizeInput);
+        }
+
+        function drawGraph(sequence, maxCylinder) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const paddingX = 40;
+            const paddingY = 30;
+            const graphWidth = canvas.width - paddingX * 2;
+            const graphHeight = canvas.height - paddingY * 2;
+
+            // Draw X-axis (Cylinders)
+            ctx.beginPath();
+            ctx.moveTo(paddingX, paddingY);
+            ctx.lineTo(canvas.width - paddingX, paddingY);
+            ctx.strokeStyle = '#cbd5e1';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Draw min and max labels
+            ctx.fillStyle = '#64748b';
+            ctx.font = "12px sans-serif";
+            ctx.fillText("0", paddingX, paddingY - 10);
+            ctx.fillText(maxCylinder.toString(), canvas.width - paddingX - 10, paddingY - 10);
+
+            // Calculate coordinates for points
+            const stepY = graphHeight / Math.max(1, sequence.length - 1);
+            
+            ctx.beginPath();
+            ctx.strokeStyle = '#0f766e';
+            ctx.lineWidth = 2;
+
+            sequence.forEach((point, index) => {
+                // Map cylinder number to X coordinate
+                const x = paddingX + (point / maxCylinder) * graphWidth;
+                const y = paddingY + (index * stepY);
+
+                if (index === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+
+                // Draw dots for each request
+                ctx.fillStyle = '#1e293b';
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Draw cylinder numbers next to dots
+                ctx.fillStyle = '#0f766e';
+                ctx.font = "bold 12px sans-serif";
+                ctx.fillText(point, x + 8, y + 4);
+            });
+            
+            // Stroke the connecting lines
+            ctx.stroke();
+        }
+
+        function resetForm() {
+            document.getElementById('requests').value = '';
+            document.getElementById('head').value = '';
+            document.getElementById('size').value = '';
+            document.getElementById('results-text').innerHTML = 'Enter your data on the left and click <strong>Calculate</strong> to see the total seek operations and head movement graph.';
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+    </script>
+</body>
+</html>
